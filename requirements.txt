@@ -1,0 +1,16 @@
+# NASA Mission Intelligence — RAG project
+#
+# Tested with Python 3.10+. Install with:
+#   pip install -r requirements.txt
+# or, with uv:
+#   uv pip install -r requirements.txt
+
+openai>=1.40
+chromadb>=0.5
+streamlit>=1.30
+pandas>=2.0
+
+# RAGAS + its langchain glue layer
+ragas>=0.2
+langchain-openai>=0.1
+datasets>=2.20

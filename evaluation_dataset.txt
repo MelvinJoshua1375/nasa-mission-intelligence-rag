@@ -1,0 +1,17 @@
+# NASA Mission Intelligence — Evaluation Dataset
+#
+# Each entry is a JSON object on a single line (jsonl) with:
+#   question         - the user's question
+#   mission          - apollo_11 | apollo_13 | challenger
+#   category         - overview | emergency | disaster_analysis | crew | technical | timeline
+#   expected_answer  - short reference answer (for BLEU/ROUGE and as a study aid)
+#
+# These are the 6 questions wired up in scripts/run_eval.py and used to compute
+# aggregate Faithfulness / Response Relevancy on the assembled RAG pipeline.
+
+{"question": "Who were the three astronauts on the Apollo 11 mission and what role did each play?", "mission": "apollo_11", "category": "crew", "expected_answer": "Neil Armstrong (Commander, first to walk on the Moon), Buzz Aldrin (Lunar Module Pilot, second to walk on the Moon), and Michael Collins (Command Module Pilot, remained in lunar orbit)."}
+{"question": "What problems did Apollo 13 encounter, and what was the cause?", "mission": "apollo_13", "category": "emergency", "expected_answer": "An oxygen tank in the Service Module ruptured roughly 56 hours into the flight, causing a loss of electrical power, oxygen, and water in the Command Module. The crew used the Lunar Module as a lifeboat to return safely to Earth."}
+{"question": "What were the last communications between the Challenger crew and Mission Control before the disaster?", "mission": "challenger", "category": "disaster_analysis", "expected_answer": "Routine ascent callouts: 'Roger, go at throttle up' acknowledged by Commander Dick Scobee. Loss of all data and voice communication occurred shortly after at approximately T+73 seconds."}
+{"question": "Walk me through the timeline of Apollo 11 from launch to lunar landing.", "mission": "apollo_11", "category": "timeline", "expected_answer": "Launch on 16 July 1969, translunar injection ~2h 44m after launch, lunar orbit insertion on 19 July, Eagle separation and powered descent on 20 July with touchdown in the Sea of Tranquility at 20:17 UTC."}
+{"question": "What technical procedures did the Apollo 13 crew use to conserve power in the Command Module?", "mission": "apollo_13", "category": "technical", "expected_answer": "They powered down the Command Module to a minimal state, transferred guidance information to the Lunar Module, used the LM's descent stage for propulsion and life support, and conserved water, oxygen, and battery power for the re-entry sequence."}
+{"question": "Give me a general overview of the Challenger mission STS-51L.", "mission": "challenger", "category": "overview", "expected_answer": "STS-51L was the 25th Space Shuttle mission and the 10th flight of the orbiter Challenger. It launched on 28 January 1986 and broke apart 73 seconds after liftoff due to a failure of an O-ring seal in the right Solid Rocket Booster, killing all seven crew members."}

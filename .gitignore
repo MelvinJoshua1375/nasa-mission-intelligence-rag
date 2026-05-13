@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.DS_Store
+
+# Logs and runtime artefacts
+*.log
+chroma_embedding_text_only.log
+
+# Local ChromaDB collections (built from data_text/)
+chroma_db_openai/
+chroma_db_smoke/
+chroma_db/
+
+# Outputs
+outputs/
