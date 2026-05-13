@@ -14,3 +14,8 @@ pandas>=2.0
 ragas>=0.2
 langchain-openai>=0.1
 datasets>=2.20
+
+# Optional: local embeddings (no API key, no signup).
+# Install with `pip install sentence-transformers` to enable
+# EMBEDDING_PROVIDER=sentence-transformers.
+# sentence-transformers>=3.0

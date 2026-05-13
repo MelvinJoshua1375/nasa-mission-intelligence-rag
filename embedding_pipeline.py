@@ -77,18 +77,37 @@ class ChromaEmbeddingPipelineTextOnly:
         self.chunk_size = chunk_size
         self.chunk_overlap = min(chunk_overlap, max(0, chunk_size - 1))
 
-        # OpenAI client. Lazy-imported so the script still works under
-        # NASA_RAG_MOCK=1 when openai isn't even installed.
+        # Pick an embedding backend. Three paths:
+        #   - "mock" (NASA_RAG_MOCK=1): deterministic hash embeddings, offline.
+        #   - "sentence-transformers" (EMBEDDING_PROVIDER=sentence-transformers):
+        #       free, local, no API key. Default model: all-MiniLM-L6-v2 (~80 MB).
+        #   - "openai" (default): OpenAI Python SDK. Honours OPENAI_BASE_URL so
+        #       any OpenAI-compatible provider (Together / Groq / OpenRouter /
+        #       HuggingFace Inference Providers / Ollama / vLLM / LM Studio) works.
         self._mock = os.getenv("NASA_RAG_MOCK") == "1"
-        if not self._mock:
+        self._provider = os.getenv("EMBEDDING_PROVIDER", "openai").lower()
+        self.openai_client = None
+        self._st_model = None
+
+        if self._mock:
+            logger.info("NASA_RAG_MOCK=1 -> using deterministic hash embeddings")
+        elif self._provider == "sentence-transformers":
+            try:
+                from sentence_transformers import SentenceTransformer  # noqa: WPS433
+            except ImportError as exc:
+                raise RuntimeError(
+                    "EMBEDDING_PROVIDER=sentence-transformers requires "
+                    "`pip install sentence-transformers`"
+                ) from exc
+            st_name = os.getenv("ST_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+            logger.info("Loading sentence-transformers model: %s", st_name)
+            self._st_model = SentenceTransformer(st_name)
+        else:
             from openai import OpenAI  # noqa: WPS433 (intentional local import)
             self.openai_client = OpenAI(
                 api_key=openai_api_key or os.getenv("OPENAI_API_KEY"),
                 base_url=os.getenv("OPENAI_BASE_URL") or None,
             )
-        else:
-            self.openai_client = None
-            logger.info("NASA_RAG_MOCK=1 -> using deterministic hash embeddings")
 
         # ChromaDB persistent client. Telemetry off — it crashes when offline.
         self.chroma_client = chromadb.PersistentClient(
@@ -167,6 +186,8 @@ class ChromaEmbeddingPipelineTextOnly:
         """Get a single embedding vector for `text`."""
         if self._mock:
             return _mock_embed(text)
+        if self._st_model is not None:
+            return self._st_model.encode(text, normalize_embeddings=True).tolist()
         try:
             resp = self.openai_client.embeddings.create(
                 model=self.embedding_model,
@@ -178,9 +199,15 @@ class ChromaEmbeddingPipelineTextOnly:
             raise
 
     def _embed_batch(self, texts: List[str]) -> List[List[float]]:
-        """Embed a batch of texts in one API call."""
+        """Embed a batch of texts in one API call (or locally)."""
         if self._mock:
             return [_mock_embed(t) for t in texts]
+        if self._st_model is not None:
+            arr = self._st_model.encode(
+                texts, batch_size=32, normalize_embeddings=True,
+                show_progress_bar=False,
+            )
+            return arr.tolist()
         resp = self.openai_client.embeddings.create(
             model=self.embedding_model,
             input=texts,
@@ -540,8 +567,12 @@ def main():
     args = parser.parse_args()
 
     is_mock = os.getenv("NASA_RAG_MOCK") == "1"
-    if not args.openai_key and not is_mock:
-        parser.error("--openai-key (or OPENAI_API_KEY env var) is required unless NASA_RAG_MOCK=1")
+    is_local = os.getenv("EMBEDDING_PROVIDER", "").lower() == "sentence-transformers"
+    if not args.openai_key and not is_mock and not is_local:
+        parser.error(
+            "--openai-key (or OPENAI_API_KEY env var) is required, unless "
+            "NASA_RAG_MOCK=1 or EMBEDDING_PROVIDER=sentence-transformers"
+        )
 
     logger.info("Initializing ChromaDB Embedding Pipeline...")
     pipeline = ChromaEmbeddingPipelineTextOnly(

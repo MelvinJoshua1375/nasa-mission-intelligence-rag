@@ -54,13 +54,17 @@ nasa-mission-intelligence-rag/
    pip install -r requirements.txt
    ```
 
-2. **Set your OpenAI API key**:
+2. **Pick a provider for the LLM + embeddings** (see *Provider options* below for free choices):
 
    ```sh
-   export OPENAI_API_KEY="sk-…"
-   # OPTIONAL: point at any OpenAI-compatible provider
+   export OPENAI_API_KEY="<your-key-here>"
+   # OPTIONAL: point the OpenAI SDK at any OpenAI-compatible provider
    # export OPENAI_BASE_URL="https://api.together.xyz/v1"
    ```
+
+   If you don't want any provider key at all, set
+   `EMBEDDING_PROVIDER=sentence-transformers` to embed locally (no signup).
+   See *Free / no-money paths* below.
 
 3. **Build the ChromaDB collection** from the bundled NASA transcripts:
 
@@ -103,6 +107,56 @@ nasa-mission-intelligence-rag/
    an aggregate (mean) per metric. A sample `outputs/eval_results.json`
    from a manual end-to-end run (answers grounded against the bundled
    transcripts) is committed for reference.
+
+## Free / no-money paths
+
+The codebase is OpenAI-shaped (per the project rubric: "Calls an OpenAI
+embedding model to vectorize each chunk"), but every dollar-cost step has
+a free alternative. Three combinations work end-to-end:
+
+### A. OpenAI free trial (simplest if you can sign up)
+
+OpenAI gives ~$5 of free credit on signup. The whole project — indexing
+all transcripts + 6 evaluation questions + interactive chat — costs a few
+cents on `text-embedding-3-small` + `gpt-3.5-turbo` or `gpt-4o-mini`.
+Just set `OPENAI_API_KEY` and go.
+
+### B. Any OpenAI-compatible provider (free tier)
+
+Several providers expose an OpenAI-compatible `/v1` endpoint with a free
+tier. Sign up, copy your key, override the base URL:
+
+| Provider | Endpoint | Free tier (at time of writing) | Has embeddings? |
+|---|---|---|---|
+| **Groq** | `https://api.groq.com/openai/v1` | Yes, generous | No (chat only) |
+| **Together AI** | `https://api.together.xyz/v1` | $1 trial credit | Yes |
+| **OpenRouter** | `https://openrouter.ai/api/v1` | Some models free | No |
+| **HuggingFace** | `https://router.huggingface.co/v1` | Yes, rate-limited | Some models |
+
+```sh
+export OPENAI_API_KEY="<provider-key>"
+export OPENAI_BASE_URL="https://api.groq.com/openai/v1"   # example
+```
+
+If your provider doesn't do embeddings (Groq, OpenRouter), combine it
+with path C for embeddings only and use the provider for chat + RAGAS.
+
+### C. Fully local embeddings (no key, no signup)
+
+Set `EMBEDDING_PROVIDER=sentence-transformers` and install
+`sentence-transformers` (uncomment the line in `requirements.txt`).
+Defaults to `sentence-transformers/all-MiniLM-L6-v2` (~80 MB, runs on
+CPU).
+
+```sh
+pip install sentence-transformers
+EMBEDDING_PROVIDER=sentence-transformers \
+  python embedding_pipeline.py --data-path ./data_text
+```
+
+You still need *some* chat LLM for `chat.py` and the RAGAS judge — pair
+this with any free option from path A or B (e.g. Groq for chat, sentence-
+transformers for embeddings).
 
 ## Offline / no-API-key mode
 
