@@ -100,7 +100,9 @@ nasa-mission-intelligence-rag/
    ```
 
    Results land in `outputs/eval_results.json` with per-question scores and
-   an aggregate (mean) per metric.
+   an aggregate (mean) per metric. A sample `outputs/eval_results.json`
+   from a manual end-to-end run (answers grounded against the bundled
+   transcripts) is committed for reference.
 
 ## Offline / no-API-key mode
 

@@ -13,5 +13,7 @@ chroma_db_openai/
 chroma_db_smoke/
 chroma_db/
 
-# Outputs
-outputs/
+# Outputs from local CI runs (the committed outputs/eval_results.json is kept;
+# anything else under outputs/ is gitignored).
+outputs/eval_results_smoke.json
+outputs/*.log
